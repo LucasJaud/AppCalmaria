@@ -42,6 +42,10 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -57,13 +61,6 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-//            LayoutBasicoTheme {
-//                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-//                    SearchBar(
-//                        modifier = Modifier.padding(innerPadding)
-//                    )
-//                }
-//            }
             CalmariaApp()
         }
     }
@@ -72,11 +69,13 @@ class MainActivity : ComponentActivity() {
  // Pesquisa
 @Composable
 fun SearchBar(
-    modifier: Modifier = Modifier
+     query: String,
+     onChange: (String) -> Unit,
+     modifier: Modifier = Modifier
 ) {
         TextField(
-            value = "",
-            onValueChange = {},
+            value = query,
+            onValueChange = onChange,
             leadingIcon = {
                 Icon(imageVector = Icons.Default.Search,
                     contentDescription = null)
@@ -98,7 +97,27 @@ fun SearchBar(
  @Composable
  fun SearchBarPreview() {
      LayoutBasicoTheme {
-         SearchBar()
+         SearchBar(query = "", onChange = {})
+     }
+ }
+
+ @Composable
+ fun AlignYourBodyRowFilter(
+     query: String,
+     modifier: Modifier = Modifier
+ ) {
+     val filteredItems = alignYourBodyData.filter { pair ->
+         query.isBlank() || stringResource(id = pair.text).contains(query, ignoreCase = true)
+     }
+
+     LazyRow(
+         horizontalArrangement = Arrangement.spacedBy(8.dp),
+         contentPadding = PaddingValues(horizontal = 16.dp),
+         modifier = modifier
+     ) {
+         items(filteredItems) { item ->
+             AlignYourBodyElement(item.drawable, item.text)
+         }
      }
  }
 
@@ -267,13 +286,16 @@ fun AlignYourBodyRow(
 
  @Composable
  fun HomeScreen(modifier: Modifier = Modifier) {
+     var searchQuery by rememberSaveable { mutableStateOf("") }
      Column (
          modifier.verticalScroll(rememberScrollState())
      ) {
          Spacer(Modifier.height(16.dp))
-         SearchBar(Modifier.height(16.dp))
+         SearchBar(
+             query = searchQuery,
+             onChange = { newQuery -> searchQuery = newQuery })
          HomeSection(R.string.align_your_body) {
-             AlignYourBodyRow()
+             AlignYourBodyRowFilter(query = searchQuery)
          }
          HomeSection(R.string.favorite_collections) {
              FavoriteCollectionsGrid()
