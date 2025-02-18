@@ -54,7 +54,13 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
 import com.example.layoutbasico.ui.theme.LayoutBasicoTheme
+
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -313,8 +319,8 @@ fun AlignYourBodyRow(
  }
 
 // Navegacao
- @Composable
-private fun BarraNavegacao(modifier: Modifier = Modifier) {
+@Composable
+private fun BarraNavegacao(navController: NavController, modifier: Modifier = Modifier) {
     NavigationBar(
         containerColor = MaterialTheme.colorScheme.surfaceVariant,
         modifier = modifier
@@ -329,8 +335,12 @@ private fun BarraNavegacao(modifier: Modifier = Modifier) {
             label = {
                 Text(stringResource(R.string.bottom_navigation_home))
             },
-            selected = true,
-            onClick = {}
+            selected = navController.currentDestination?.route == "home",
+            onClick = {
+                navController.navigate("home") {
+                    popUpTo("home") { inclusive = true }
+                }
+            }
         )
         NavigationBarItem(
             icon = {
@@ -342,8 +352,12 @@ private fun BarraNavegacao(modifier: Modifier = Modifier) {
             label = {
                 Text(stringResource(R.string.bottom_navigation_profile))
             },
-            selected = false,
-            onClick = {}
+            selected = navController.currentDestination?.route == "profile",
+            onClick = {
+                navController.navigate("profile") {
+                    popUpTo("profile") { inclusive = true }
+                }
+            }
         )
     }
 }
@@ -352,16 +366,66 @@ private fun BarraNavegacao(modifier: Modifier = Modifier) {
 //Scaffold
 @Composable
 fun CalmariaApp() {
+    val navController = rememberNavController()
     LayoutBasicoTheme {
         Scaffold(bottomBar = {
-            BarraNavegacao()
-        }) {
-            padding ->
-                HomeScreen(Modifier.padding(padding))
+            BarraNavegacao(navController)
+        }) { padding ->
+            NavHost(
+                navController = navController,
+                startDestination = "home",
+                modifier = Modifier.padding(padding)
+            ) {
+                composable("home") {
+                    HomeScreen()
+                }
+                composable("profile") {
+                    ProfileScreen()
+                }
+            }
         }
     }
 }
 
+ @Composable
+ fun ProfileScreen(modifier: Modifier = Modifier) {
+     Column(
+         horizontalAlignment = Alignment.CenterHorizontally,
+         verticalArrangement = Arrangement.Center,
+         modifier = modifier
+             .fillMaxSize()
+             .padding(16.dp)
+     ) {
+         Icon(
+             imageVector = Icons.Default.AccountCircle,
+             contentDescription = null,
+             modifier = Modifier
+                 .size(120.dp)
+                 .padding(bottom = 16.dp),
+             tint = MaterialTheme.colorScheme.primary
+         )
+         Text(
+             text = "Nome: João da Silva",
+             style = MaterialTheme.typography.titleMedium
+         )
+         Text(
+             text = "Email: joao.silva@email.com",
+             style = MaterialTheme.typography.bodyMedium
+         )
+         Text(
+             text = "Cidade: São Paulo",
+             style = MaterialTheme.typography.bodyMedium
+         )
+     }
+ }
+
+ @Preview(showBackground = true)
+ @Composable
+ fun ProfileScreenPreview() {
+     LayoutBasicoTheme {
+         ProfileScreen()
+     }
+ }
 
 
 
